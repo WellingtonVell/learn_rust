@@ -15,6 +15,29 @@ fn main() {
     string_example();
     concatenation_example();
     index_strings();
+    struct_example();
+    build_user(
+        String::from("johndoe@example.com"),
+        String::from("John Doe"),
+    );
+    tuple_struct();
+    calc_area_rect(&Rect {
+        width: 30,
+        height: 50,
+    });
+    calc_area_rect2(&Rect {
+        width: 30,
+        height: 50,
+    });
+    enum_example();
+    option_example();
+    value_in_cents(Coin::Dime);
+    value_in_cents(Coin::Quarter);
+    value_in_cents(Coin::Nickel);
+    value_in_cents(Coin::Penny);
+    if_let_example();
+    // result_example();
+    operation_example();
 }
 
 fn vars() {
@@ -316,4 +339,293 @@ fn index_strings() {
     // let s2: &str = &s1[0..2]; // This is how you can get a slice of the string, however this would cause a panic because the 🍕 has a length of 4 bytes
     let s2: &str = &s1[0..4];
     println!("s2: {}", s2);
+}
+
+// Structs
+// Structs are like Types/Interface in typescript
+// Derive allow us to automatically implement traits for our struct
+#[derive(Debug)]
+struct User {
+    username: String,
+    email: String,
+    sign_in_count: u64,
+    active: bool,
+}
+
+fn struct_example() {
+    let mut user: User = User {
+        username: String::from("John Doe"),
+        email: String::from("john.doe@example.com"),
+        sign_in_count: 1,
+        active: true,
+    };
+
+    let name: String = user.username;
+    println!("name: {}", name);
+    println!("sign_in_count: {}", user.sign_in_count);
+    println!("active: {}", user.active);
+    user.email = String::from("john.doe.mutable@example.com");
+
+    let user2: User = build_user(
+        String::from("jane.doe@example.com"),
+        String::from("Jane Doe"),
+    );
+    println!("user2: {:?}", user2);
+    println!("sign_in_count: {}", user2.sign_in_count);
+    println!("active: {}", user2.active);
+
+    let user3: User = User { ..user2 };
+    println!("user3: {:?}", user3);
+    println!("sign_in_count: {}", user3.sign_in_count);
+    println!("active: {}", user3.active);
+}
+
+fn build_user(email: String, username: String) -> User {
+    User {
+        email,
+        username,
+        sign_in_count: 0,
+        active: true,
+    }
+}
+
+// Tuple Structs are similar to structs, but they are similar to tuples in that they do not have named fields
+fn tuple_struct() {
+    struct Color(i32, i32, i32);
+    let black: Color = Color(0, 0, 0);
+
+    let r: i32 = black.0;
+    let g: i32 = black.1;
+    let b: i32 = black.2;
+    println!("r: {}, g: {}, b: {}", r, g, b);
+}
+
+struct Rect {
+    width: u32,
+    height: u32,
+}
+
+fn calc_area_rect(dimenstions: &Rect) -> u32 {
+    let rect: Rect = Rect {
+        width: dimenstions.width,
+        height: dimenstions.height,
+    };
+
+    println!("Area of rectangle: {}", rect.width * rect.height);
+    rect.width * rect.height
+}
+
+// Methods
+// Methods are functions that are associated with a struct
+// They are defined inside the struct and have access to all the fields of the struct
+impl Rect {
+    fn area(&self) -> u32 {
+        self.width * self.height
+    }
+
+    fn can_hold(&self, other: &Rect) -> bool {
+        self.width >= other.width && self.height >= other.height
+    }
+}
+
+fn calc_area_rect2(dimenstions: &Rect) -> u32 {
+    let rect: Rect = Rect {
+        width: dimenstions.width,
+        height: dimenstions.height,
+    };
+
+    let rect1: Rect = Rect {
+        width: 40,
+        height: 60,
+    };
+
+    let rect2: Rect = Rect {
+        width: 20,
+        height: 30,
+    };
+
+    let rect3: Rect = Rect::square(10);
+
+    println!("Area of rectangle using method: {}", rect.area());
+    println!("Can rect hold rect1: {}", rect.can_hold(&rect1));
+    println!("Can rect hold rect2: {}", rect.can_hold(&rect2));
+    println!("Can rect1 hold rect2: {}", rect1.can_hold(&rect2));
+    println!("Area of square: {}", rect3.area());
+    rect.area()
+}
+
+// Methods, use the `self` keyword to access fields of the struct, while associated functions do not use `self`
+// Associated functions are functions that are associated with a struct
+// They are defined inside the `impl` block and do not have access to the fields of the struct
+impl Rect {
+    fn square(size: u32) -> Rect {
+        Rect {
+            width: size,
+            height: size,
+        }
+    }
+}
+
+// Enums
+#[derive(Debug)]
+enum IpAddrKind {
+    V4(u8, u8, u8, u8),
+    V6(String),
+}
+
+#[derive(Debug)]
+struct IpAddr {
+    kind: IpAddrKind,
+    address: String,
+}
+
+fn enum_example() {
+    let ip_v4: IpAddr = IpAddr {
+        kind: IpAddrKind::V4(192, 168, 1, 1),
+        address: String::from("192.168.1.1"),
+    };
+    let ip_v6: IpAddr = IpAddr {
+        kind: IpAddrKind::V6("::1".to_string()),
+        address: String::from("::1"),
+    };
+
+    println!("ip_v4: {:?}", ip_v4);
+    println!("ip_v6: {:?}", ip_v6);
+
+    // Use the fields of IpAddrKind::V4 to avoid dead_code warning
+    if let IpAddrKind::V4(a, b, c, d) = ip_v4.kind {
+        println!("IPv4 fields: {}.{}.{}.{}", a, b, c, d);
+        println!("IPv4 address field: {}", ip_v4.address);
+    }
+
+    if let IpAddrKind::V6(addr) = ip_v6.kind {
+        println!("IPv6 address: {}", addr);
+        println!("IPv6 address field: {}", ip_v6.address);
+    }
+}
+
+// Option Enum
+// The Option enum is a powerful way to handle optional values in Rust
+// It can either be Some(T) or None, where T is the type of the value
+// This allows us to avoid null pointer exceptions and handle cases where a value may not be present
+#[derive(Debug)]
+enum Option<T> {
+    Some(T),
+    None,
+}
+
+fn option_example() {
+    let some_value: Option<i32> = Option::Some(5);
+    let no_value: Option<i32> = Option::None;
+
+    match some_value {
+        Option::Some(v) => println!("Some value: {}", v),
+        Option::None => println!("No value"),
+    }
+
+    match no_value {
+        Option::Some(v) => println!("Some value: {}", v),
+        Option::None => println!("No value"),
+    }
+}
+
+// Matching on Option
+
+enum Coin {
+    Penny,
+    Nickel,
+    Dime,
+    Quarter,
+}
+
+fn value_in_cents(coin: Coin) -> u8 {
+    match coin {
+        Coin::Penny => {
+            println!("This is a penny");
+            1
+        }
+        Coin::Nickel => {
+            println!("This is a nickel");
+            5
+        }
+        Coin::Dime => {
+            println!("This is a dime");
+            10
+        }
+        Coin::Quarter => {
+            println!("This is a quarter");
+            25
+        }
+    }
+}
+
+// IF LET
+fn if_let_example() {
+    let some_value = Some(5);
+
+    // Match is more expensive than if let, so if we only care about one case, we can use if let
+    match some_value {
+        Some(5) => println!("Some value"),
+        _ => println!("No value"),
+    }
+
+    if let Some(5) = some_value {
+        println!("Some value");
+    }
+}
+
+// Result
+// enum Result<T, E> {
+//     OK(T),
+//     Err(E),
+// }
+
+// fn result_example() {
+//     let result: Result<i32, String> = Result::OK(5);
+//     let error: Result<i32, String> = Result::Err(String::from("An error occurred"));
+
+//     match result {
+//         Result::OK(v) => println!("Result is OK: {}", v),
+//         Result::Err(e) => println!("Error: {}", e),
+//     }
+
+//     match error {
+//         Result::OK(v) => println!("Result is OK: {}", v),
+//         Result::Err(e) => println!("Error: {}", e),
+//     }
+// }
+
+enum Operation {
+    Add(i32, i32),
+    Mul(i32, i32),
+    Sub { first: i32, second: i32 },
+    Div { divident: i32, divisor: i32 },
+}
+
+impl Operation {
+    fn execute(self) -> Result<i32, String> {
+        match self {
+            Self::Add(a, b) => Ok(a + b),
+            Self::Mul(a, b) => Ok(a * b),
+            Self::Sub { first, second } => Ok(first - second),
+            Self::Div { divident, divisor } => {
+                if divisor == 0 {
+                    Err(String::from("Can not divide by zero"))
+                } else {
+                    Ok(divident / divisor)
+                }
+            }
+        }
+    }
+}
+
+fn operation_example() {
+    let user_input = Operation::Div {
+        divident: 20,
+        divisor: 0,
+    };
+    match user_input.execute() {
+        Ok(res) => println!("Result: {}", res),
+        Err(e) => println!("Error: {}", e),
+    }
 }
