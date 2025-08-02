@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 fn main() {
     vars();
     data_types();
@@ -38,6 +40,11 @@ fn main() {
     if_let_example();
     // result_example();
     operation_example();
+    vector_example();
+    vector_example2();
+    hashmap_example();
+    hashmap_example2();
+    hashmap_example3();
 }
 
 fn vars() {
@@ -628,4 +635,108 @@ fn operation_example() {
         Ok(res) => println!("Result: {}", res),
         Err(e) => println!("Error: {}", e),
     }
+}
+
+// Vectors
+// Vectors are a growable array type
+// They are similar to arrays, but they can grow dynamically
+fn vector_example() {
+    let a: [i32; 5] = [1, 2, 3, 4, 5];
+
+    let mut v: Vec<i32> = Vec::new();
+    v.push(10);
+    v.push(20);
+    v.push(30);
+
+    let v2: Vec<i32> = vec![10, 20, 30];
+
+    // This works because we are using the dereference operator to get a reference to the first element of the vector
+    // Would cause an runtime error if we tried to access an index that is out of bounds of the vector
+    let first: &i32 = &v2[0];
+    println!("first: {}", first);
+
+    match v.get(20) {
+        Some(value) => println!("Value at index 20: {}", value),
+        None => println!("No value at index 20"),
+    }
+
+    for i in &a {
+        println!("Element: {}", i);
+    }
+
+    for i in &mut v {
+        *i += 10;
+        println!("Mutated: {}", i);
+    }
+}
+
+// Vectors with different types
+// We can use enums to store different types in a vector
+fn vector_example2() {
+    enum SpreadsheetCell {
+        Int(i32),
+        Float(f64),
+        Text(String),
+    }
+
+    let row: Vec<SpreadsheetCell> = vec![
+        SpreadsheetCell::Int(1),
+        SpreadsheetCell::Text(String::from("Hello")),
+        SpreadsheetCell::Float(3.14),
+    ];
+
+    match &row[1] {
+        SpreadsheetCell::Int(i) => println!("Integer: {}", i),
+        SpreadsheetCell::Float(f) => println!("Float: {}", f),
+        SpreadsheetCell::Text(t) => println!("Text: {}", t),
+    }
+}
+
+// Hashmaps
+// allow you to store key-value pairs, they can be in any type, uses a hash function to map keys to values
+fn hashmap_example() {
+    let blue: String = String::from("Blue");
+    let red: String = String::from("Red");
+
+    let mut scores: HashMap<String, i32> = HashMap::new();
+
+    scores.insert(blue, 10);
+    scores.insert(red, 5);
+
+    let team_name: String = String::from("Blue");
+    let score = scores.get(&team_name);
+
+    println!("Score: {}", score.unwrap());
+
+    for (key, value) in &scores {
+        println!("{}: {}", key, value);
+    }
+}
+
+// Update a value in a hashmap
+fn hashmap_example2() {
+    let mut scores: HashMap<String, i32> = HashMap::new();
+
+    scores.insert(String::from("Blue"), 10);
+    scores.insert(String::from("Blue"), 20); // This will overwrite the previous value for "Blue"
+
+    scores.entry(String::from("Red")).or_insert(5);
+    scores.entry(String::from("Red")).or_insert(40); // This will not overwrite the previous value for "Red"
+
+    for (key, value) in &scores {
+        println!("{}: {}", key, value);
+    }
+}
+
+// Update a value in a hashmap based on the old value
+fn hashmap_example3() {
+    let text = "hello world wonderful world";
+    let mut map: HashMap<String, i32> = HashMap::new();
+
+    for word in text.split_whitespace() {
+        let count = map.entry(word.to_string()).or_insert(0);
+        *count += 1; // Increment the count for the word
+    }
+
+    println!("{:?}", map)
 }
